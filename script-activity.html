@@ -1,0 +1,85 @@
+<!--
+  WEATHER API FETCH - Script Activity Version
+  ============================================
+  Use this in Automation Studio Script Activity.
+  Test with cloudpage-debug.html first!
+-->
+
+<script runat="server">
+Platform.Load("Core","1");
+
+// 5 global cities with diverse weather
+var cities = [
+  {id: "sydney",      name: "Sydney",      lat: -33.87, lon: 151.21},
+  {id: "los_angeles", name: "Los Angeles", lat: 34.05,  lon: -118.24},
+  {id: "reykjavik",   name: "Reykjavik",   lat: 64.15,  lon: -21.94},
+  {id: "tokyo",       name: "Tokyo",       lat: 35.68,  lon: 139.69},
+  {id: "svalbard",    name: "Svalbard",    lat: 78.22,  lon: 15.64}
+];
+
+var weatherDE = DataExtension.Init("WeatherData");
+
+for (var i = 0; i < cities.length; i++) {
+  var city = cities[i];
+  var url = "https://api.open-meteo.com/v1/forecast?" +
+            "latitude=" + city.lat +
+            "&longitude=" + city.lon +
+            "&daily=temperature_2m_max,precipitation_sum,weathercode" +
+            "&timezone=auto";
+
+  try {
+    // Use Platform.Function.HTTPGet - the correct SFMC method
+    var response = Platform.Function.HTTPGet(url);
+
+    if (response && response.length > 0) {
+      var data = Platform.Function.ParseJSON(response);
+      var daily = data.daily;
+
+      // Calculate 7-day average temperature
+      var temps = daily.temperature_2m_max;
+      var sum = 0;
+      for (var t = 0; t < temps.length; t++) { sum += temps[t]; }
+      var avgTemp = Math.round(sum / temps.length);
+
+      // Determine weather category
+      var code = daily.weathercode[0];
+      var temp = daily.temperature_2m_max[0];
+      var category = "Cloudy"; // default
+
+      if (code >= 71 && code <= 77) {
+        category = "Snowy";
+      } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        category = "Rainy";
+      } else if (code <= 1 && temp > 15) {
+        category = "Sunny";
+      } else if (temp < 5) {
+        category = "Cold";
+      }
+
+      // Build row for Data Extension
+      var row = {
+        CityID: city.id,
+        CityName: city.name,
+        FetchDate: Now(),
+        Day1_Date: daily.time[0],
+        Day1_Temp: Math.round(temp),
+        Day1_WeatherCode: code,
+        Day1_Precipitation: daily.precipitation_sum[0],
+        Day2_Temp: Math.round(daily.temperature_2m_max[1]),
+        Day3_Temp: Math.round(daily.temperature_2m_max[2]),
+        Day7_Temp_Avg: avgTemp,
+        WeatherCategory: category
+      };
+
+      // Upsert - update if exists, insert if new
+      var result = weatherDE.Rows.Update(row, ["CityID"], [city.id]);
+      if (result == 0) {
+        weatherDE.Rows.Add(row);
+      }
+    }
+
+  } catch(e) {
+    // Log error but continue with other cities
+  }
+}
+</script>
