@@ -1,0 +1,26 @@
+DYNAMIC SUBJECT LINE (paste in Email Subject field):
+====================================================
+
+%%=v(@subjectLine)=%%
+
+
+EXAMPLES BY WEATHER:
+--------------------
+Sunny:  "Perfect weather in Sydney! Time to get outside"
+Rainy:  "Rain in Sydney? We've got you covered!"
+Cold:   "Cold week ahead in Reykjavik - Stay warm!"
+Snowy:  "Snow in Svalbard! Winter magic is here"
+Cloudy: "This week's best deals for you in Tokyo"
+
+PREHEADER EXAMPLES (includes 7-day average):
+-------------------------------------------
+Sunny:  "It's 28°C today, averaging 28°C this week - shop summer essentials!"
+Rainy:  "Week ahead averaging 20°C - stay dry with our rainy day picks!"
+Cold:   "Averaging 0°C this week. Bundle up with our winter essentials!"
+Snowy:  "Week ahead averaging -19°C - embrace the winter wonderland!"
+Cloudy: "Currently 12°C, weekly average 12°C - check out our picks!"
+
+
+NOTE: The @subjectLine variable is set in the email body AMPscript.
+Make sure the AMPscript block runs BEFORE the subject line is evaluated
+by placing it at the very top of your email HTML.
