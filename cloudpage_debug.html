@@ -1,0 +1,150 @@
+<!--
+  WEATHER API DEBUG - CloudPage Version
+  ======================================
+  Use this in a CloudPage to debug and see output.
+  Once working, use the script-activity.html version in Automation Studio.
+-->
+
+<script runat="server">
+Platform.Load("Core","1");
+
+Write("<h1>Weather API Debug</h1><pre>");
+
+// 5 global cities with diverse weather
+var cities = [
+  {id: "sydney",      name: "Sydney",      lat: -33.87, lon: 151.21},
+  {id: "los_angeles", name: "Los Angeles", lat: 34.05,  lon: -118.24},
+  {id: "reykjavik",   name: "Reykjavik",   lat: 64.15,  lon: -21.94},
+  {id: "tokyo",       name: "Tokyo",       lat: 35.68,  lon: 139.69},
+  {id: "svalbard",    name: "Svalbard",    lat: 78.22,  lon: 15.64}
+];
+
+Write("Cities to process: " + cities.length + "\n\n");
+
+// Check if DE exists
+var weatherDE;
+try {
+  weatherDE = DataExtension.Init("WeatherData");
+  Write("SUCCESS: WeatherData DE found\n\n");
+} catch(e) {
+  Write("ERROR: Could not find WeatherData DE\n");
+  Write("Make sure DE exists with exact name 'WeatherData'\n");
+  Write("Error: " + Stringify(e) + "\n\n");
+}
+
+for (var i = 0; i < cities.length; i++) {
+  var city = cities[i];
+  Write("--- Processing: " + city.name + " ---\n");
+
+  var url = "https://api.open-meteo.com/v1/forecast?" +
+            "latitude=" + city.lat +
+            "&longitude=" + city.lon +
+            "&daily=temperature_2m_max,precipitation_sum,weathercode" +
+            "&timezone=auto";
+
+  Write("URL: " + url + "\n");
+
+  try {
+    Write("Making HTTP request using HTTPGet...\n");
+
+    // Use Platform.Function.HTTPGet - the correct SFMC method
+    var response = Platform.Function.HTTPGet(url);
+
+    Write("Response type: " + typeof response + "\n");
+    Write("Response length: " + (response ? response.length : 0) + " chars\n");
+
+    if (response && response.length > 0) {
+      // Show first 200 chars of response for debugging
+      Write("Response preview: " + response.substring(0, 200) + "...\n");
+
+      var data = Platform.Function.ParseJSON(response);
+      Write("JSON parsed successfully\n");
+
+      var daily = data.daily;
+      Write("Day 1 temp: " + daily.temperature_2m_max[0] + "C\n");
+      Write("Day 1 code: " + daily.weathercode[0] + "\n");
+
+      // Calculate 7-day average
+      var temps = daily.temperature_2m_max;
+      var sum = 0;
+      for (var t = 0; t < temps.length; t++) { sum += temps[t]; }
+      var avgTemp = Math.round(sum / temps.length);
+
+      // Determine weather category
+      var code = daily.weathercode[0];
+      var temp = daily.temperature_2m_max[0];
+      var category = "Cloudy";
+
+      if (code >= 71 && code <= 77) {
+        category = "Snowy";
+      } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+        category = "Rainy";
+      } else if (code <= 1 && temp > 15) {
+        category = "Sunny";
+      } else if (temp < 5) {
+        category = "Cold";
+      }
+
+      Write("Category: " + category + "\n");
+
+      // Build row
+      var row = {
+        CityID: city.id,
+        CityName: city.name,
+        FetchDate: Now(),
+        Day1_Date: daily.time[0],
+        Day1_Temp: Math.round(temp),
+        Day1_WeatherCode: code,
+        Day1_Precipitation: daily.precipitation_sum[0],
+        Day2_Temp: Math.round(daily.temperature_2m_max[1]),
+        Day3_Temp: Math.round(daily.temperature_2m_max[2]),
+        Day7_Temp_Avg: avgTemp,
+        WeatherCategory: category
+      };
+
+      Write("Row data: " + Stringify(row) + "\n");
+
+      // Try to update/insert
+      if (weatherDE) {
+        try {
+          var updateResult = weatherDE.Rows.Update(row, ["CityID"], [city.id]);
+          Write("Update result: " + updateResult + " rows updated\n");
+
+          if (updateResult == 0) {
+            Write("No rows updated, trying insert...\n");
+            try {
+              var addResult = weatherDE.Rows.Add(row);
+              Write("Insert result: " + Stringify(addResult) + "\n");
+            } catch(addError) {
+              Write("INSERT ERROR: " + Stringify(addError) + "\n");
+              Write("Check if DE fields accept negative numbers (Day1_Temp: " + row.Day1_Temp + ")\n");
+            }
+          }
+        } catch(deError) {
+          Write("DE ERROR: " + Stringify(deError) + "\n");
+        }
+
+        // Verify the row exists
+        try {
+          var verify = weatherDE.Rows.Lookup(["CityID"], [city.id]);
+          Write("Verification: " + (verify && verify.length > 0 ? "ROW EXISTS" : "ROW NOT FOUND") + "\n");
+        } catch(verifyError) {
+          Write("Verify error: " + Stringify(verifyError) + "\n");
+        }
+      }
+
+    } else {
+      Write("ERROR: Empty or null response\n");
+      Write("SFMC may be blocking external HTTP requests.\n");
+      Write("Check: Setup > Security > IP Allowlisting\n");
+    }
+
+  } catch(e) {
+    Write("ERROR: " + Stringify(e) + "\n");
+  }
+
+  Write("\n");
+}
+
+Write("</pre><h2>Done!</h2>");
+</script>
