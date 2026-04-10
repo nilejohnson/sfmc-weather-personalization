@@ -1,0 +1,421 @@
+%%[
+/* Weather Personalization Email Template - WeatherWear Co. */
+
+/* Get subscriber's city from sendable DE */
+SET @cityId = AttributeValue("CityID")
+SET @firstName = AttributeValue("FirstName")
+
+/* Lookup weather data for this city */
+SET @weatherCategory = Lookup("WeatherData", "WeatherCategory", "CityID", @cityId)
+SET @todayTemp = Lookup("WeatherData", "Day1_Temp", "CityID", @cityId)
+SET @cityName = Lookup("WeatherData", "CityName", "CityID", @cityId)
+SET @day2Temp = Lookup("WeatherData", "Day2_Temp", "CityID", @cityId)
+SET @day3Temp = Lookup("WeatherData", "Day3_Temp", "CityID", @cityId)
+SET @day7Avg = Lookup("WeatherData", "Day7_Temp_Avg", "CityID", @cityId)
+
+/* Fallback if no city found */
+IF Empty(@cityId) OR Empty(@weatherCategory) THEN
+  SET @weatherCategory = "Cloudy"
+  SET @todayTemp = "--"
+  SET @cityName = "your city"
+  SET @day7Avg = "--"
+ENDIF
+
+/* Dynamic Subject Line and Preheader */
+IF @weatherCategory == "Sunny" THEN
+  SET @subjectLine = Concat("Perfect weather in ", @cityName, "! Time to get outside")
+  SET @preheader = Concat("It's ", @todayTemp, "°C today, averaging ", @day7Avg, "°C this week - shop summer essentials!")
+ELSEIF @weatherCategory == "Rainy" THEN
+  SET @subjectLine = Concat("Rain in ", @cityName, "? We've got you covered!")
+  SET @preheader = Concat("Week ahead averaging ", @day7Avg, "°C - stay dry with our rainy day picks!")
+ELSEIF @weatherCategory == "Cold" THEN
+  SET @subjectLine = Concat("Cold week ahead in ", @cityName, " - Stay warm!")
+  SET @preheader = Concat("Averaging ", @day7Avg, "°C this week. Bundle up with our winter essentials!")
+ELSEIF @weatherCategory == "Snowy" THEN
+  SET @subjectLine = Concat("Snow in ", @cityName, "! Winter magic is here")
+  SET @preheader = Concat("Week ahead averaging ", @day7Avg, "°C - embrace the winter wonderland!")
+ELSE
+  SET @subjectLine = Concat("This week's best deals for you in ", @cityName)
+  SET @preheader = Concat("Currently ", @todayTemp, "°C, weekly average ", @day7Avg, "°C - check out our picks!")
+ENDIF
+]%%
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeatherWear - Dressed for Any Weather</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+
+<!-- Preheader text (shows in inbox preview) -->
+<div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+  %%=v(@preheader)=%%
+</div>
+
+<!-- Email Container -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+  <tr>
+    <td align="center" style="padding: 20px 0;">
+
+      <!-- Main Content -->
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+        <!-- Logo Header -->
+        <tr>
+          <td align="center" style="padding: 25px 20px; background-color: #1a1a2e;">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 2px;">WEATHERWEAR</h1>
+            <p style="margin: 5px 0 0 0; color: #a0a0a0; font-size: 12px; letter-spacing: 1px;">DRESSED FOR ANY WEATHER</p>
+          </td>
+        </tr>
+
+%%[ IF @weatherCategory == "Sunny" THEN ]%%
+<!-- ========== SUNNY EMAIL ========== -->
+
+        <!-- Weather Banner -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); padding: 30px 20px; text-align: center;">
+            <p style="margin: 0; color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Weather Update</p>
+            <h2 style="margin: 10px 0 5px 0; color: #ffffff; font-size: 36px;">%%=v(@cityName)=%%</h2>
+            <p style="margin: 0; color: #ffffff; font-size: 56px; font-weight: bold;">%%=v(@todayTemp)=%%°C</p>
+            <p style="margin: 5px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">7-day avg: %%=v(@day7Avg)=%%°C</p>
+            <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px;">☀️ Clear skies ahead!</p>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding: 30px 30px 20px 30px;">
+            <h1 style="margin: 0; color: #333333; font-size: 24px;">Hi %%=v(@firstName)=%%, the sun is shining!</h1>
+            <p style="margin: 15px 0 0 0; color: #666666; font-size: 16px; line-height: 1.6;">It's a beautiful %%=v(@todayTemp)=%%°C in %%=v(@cityName)=%% today, and the week ahead looks great with an average of %%=v(@day7Avg)=%%°C. Perfect time to stock up on summer essentials!</p>
+          </td>
+        </tr>
+
+        <!-- Products - Temperature Based -->
+        <tr>
+          <td style="padding: 0 20px 30px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+%%[ IF @todayTemp >= 25 THEN ]%%
+<!-- Hot Sunny (25°C+): Summer essentials -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/7NTwNdFt/sunny-sunglasses.jpg" alt="Sunglasses" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Classic Sunglasses</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$89</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/mCQwf5Qf/sunny-dress.jpg" alt="Summer Dress" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Summer Dress</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$129</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+%%[ ELSEIF @todayTemp >= 15 THEN ]%%
+<!-- Warm Sunny (15-24°C): Light layers -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/7NTwNdFt/sunny-sunglasses.jpg" alt="Sunglasses" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Classic Sunglasses</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$89</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/qYNNDB0D/sunny-cardigan.jpg" alt="Light Cardigan" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Light Cardigan</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$79</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+%%[ ELSE ]%%
+<!-- Cool Sunny (<15°C): Sunglasses + jacket -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/7NTwNdFt/sunny-sunglasses.jpg" alt="Sunglasses" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Polarized Sunglasses</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$99</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/tp2hWFRX/cloudy-jacket.jpg" alt="Light Jacket" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Light Jacket</h3>
+                  <p style="margin: 0; color: #f5a623; font-size: 20px; font-weight: bold;">$119</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #f5a623; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Prep for the Week</a>
+                </td>
+%%[ ENDIF ]%%
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+%%[ ELSEIF @weatherCategory == "Rainy" THEN ]%%
+<!-- ========== RAINY EMAIL ========== -->
+
+        <!-- Weather Banner -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
+            <p style="margin: 0; color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Weather Update</p>
+            <h2 style="margin: 10px 0 5px 0; color: #ffffff; font-size: 36px;">%%=v(@cityName)=%%</h2>
+            <p style="margin: 0; color: #ffffff; font-size: 56px; font-weight: bold;">%%=v(@todayTemp)=%%°C</p>
+            <p style="margin: 5px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">7-day avg: %%=v(@day7Avg)=%%°C</p>
+            <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px;">🌧️ Rain in the forecast</p>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding: 30px 30px 20px 30px;">
+            <h1 style="margin: 0; color: #333333; font-size: 24px;">Hi %%=v(@firstName)=%%, rain is on the way!</h1>
+            <p style="margin: 15px 0 0 0; color: #666666; font-size: 16px; line-height: 1.6;">Looks like %%=v(@cityName)=%% is getting some rain with a weekly average of %%=v(@day7Avg)=%%°C. Be prepared for the week ahead with our rainy day essentials!</p>
+          </td>
+        </tr>
+
+        <!-- Products - Temperature Based -->
+        <tr>
+          <td style="padding: 0 20px 30px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+%%[ IF @todayTemp >= 20 THEN ]%%
+<!-- Warm Rain (20°C+): Light protection -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/B54dtMmP/rainy-umrella.jpg" alt="Umbrella" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Compact Umbrella</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$45</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Dry</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/8gnhQK5Y/rainy-poncho.jpg" alt="Rain Poncho" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Light Rain Poncho</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$35</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Dry</a>
+                </td>
+%%[ ELSEIF @todayTemp >= 10 THEN ]%%
+<!-- Mild Rain (10-19°C): Standard rain gear -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/B54dtMmP/rainy-umrella.jpg" alt="Umbrella" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Premium Umbrella</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$45</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Dry This Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/V0fQCK40/rainy-jacket.jpg" alt="Rain Jacket" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Waterproof Jacket</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$179</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Dry This Week</a>
+                </td>
+%%[ ELSE ]%%
+<!-- Cold Rain (<10°C): Heavy rain gear -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/V0fQCK40/rainy-jacket.jpg" alt="Rain Jacket" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Insulated Rain Coat</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$219</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Warm & Dry</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/qLNzwfyd/rainy-boots.jpg" alt="Rain Boots" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Waterproof Boots</h3>
+                  <p style="margin: 0; color: #667eea; font-size: 20px; font-weight: bold;">$159</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Warm & Dry</a>
+                </td>
+%%[ ENDIF ]%%
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+%%[ ELSEIF @weatherCategory == "Cold" THEN ]%%
+<!-- ========== COLD EMAIL ========== -->
+
+        <!-- Weather Banner -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); padding: 30px 20px; text-align: center;">
+            <p style="margin: 0; color: #333333; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Weather Update</p>
+            <h2 style="margin: 10px 0 5px 0; color: #333333; font-size: 36px;">%%=v(@cityName)=%%</h2>
+            <p style="margin: 0; color: #4a90d9; font-size: 56px; font-weight: bold;">%%=v(@todayTemp)=%%°C</p>
+            <p style="margin: 5px 0 0 0; color: #4a90d9; font-size: 14px;">7-day avg: %%=v(@day7Avg)=%%°C</p>
+            <p style="margin: 10px 0 0 0; color: #333333; font-size: 16px;">❄️ Bundle up - it's chilly!</p>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding: 30px 30px 20px 30px;">
+            <h1 style="margin: 0; color: #333333; font-size: 24px;">Hi %%=v(@firstName)=%%, a cold week ahead!</h1>
+            <p style="margin: 15px 0 0 0; color: #666666; font-size: 16px; line-height: 1.6;">Brr! It's %%=v(@todayTemp)=%%°C in %%=v(@cityName)=%% today, and the 7-day forecast shows an average of %%=v(@day7Avg)=%%°C. Time to bundle up for the week ahead!</p>
+          </td>
+        </tr>
+
+        <!-- Products - Temperature Based -->
+        <tr>
+          <td style="padding: 0 20px 30px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+%%[ IF @todayTemp < 0 THEN ]%%
+<!-- Freezing (<0°C): Heavy winter gear -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/TMxYPyNf/cold-coat.jpg" alt="Winter Coat" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Insulated Parka</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$299</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Beat the Freeze</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/VcZqMwVS/big-scar-cold-weather.jpg" alt="Cozy Blanket Scarf" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Cozy Blanket Scarf</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$79</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Beat the Freeze</a>
+                </td>
+%%[ ELSEIF @todayTemp < 10 THEN ]%%
+<!-- Cold (0-9°C): Standard winter gear -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/TMxYPyNf/cold-coat.jpg" alt="Winter Coat" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Winter Coat</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$249</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Beat the Cold Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/HWNhzyZ/cold-sweater.jpg" alt="Warm Sweater" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Cozy Sweater</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$89</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Beat the Cold Week</a>
+                </td>
+%%[ ELSE ]%%
+<!-- Cool (10-14°C): Light layers -->
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/tp2hWFRX/cloudy-jacket.jpg" alt="Light Jacket" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Fleece Jacket</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$129</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Comfortable</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/HWNhzyZ/cold-sweater.jpg" alt="Warm Sweater" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Light Sweater</h3>
+                  <p style="margin: 0; color: #4a90d9; font-size: 20px; font-weight: bold;">$69</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #4a90d9; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Stay Comfortable</a>
+                </td>
+%%[ ENDIF ]%%
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+%%[ ELSEIF @weatherCategory == "Snowy" THEN ]%%
+<!-- ========== SNOWY EMAIL ========== -->
+
+        <!-- Weather Banner -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #e6e9f0 0%, #d5dce6 100%); padding: 30px 20px; text-align: center;">
+            <p style="margin: 0; color: #333333; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Weather Update</p>
+            <h2 style="margin: 10px 0 5px 0; color: #333333; font-size: 36px;">%%=v(@cityName)=%%</h2>
+            <p style="margin: 0; color: #5b7fa3; font-size: 56px; font-weight: bold;">%%=v(@todayTemp)=%%°C</p>
+            <p style="margin: 5px 0 0 0; color: #5b7fa3; font-size: 14px;">7-day avg: %%=v(@day7Avg)=%%°C</p>
+            <p style="margin: 10px 0 0 0; color: #333333; font-size: 16px;">🌨️ Snow is falling!</p>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding: 30px 30px 20px 30px;">
+            <h1 style="margin: 0; color: #333333; font-size: 24px;">Hi %%=v(@firstName)=%%, winter wonderland awaits!</h1>
+            <p style="margin: 15px 0 0 0; color: #666666; font-size: 16px; line-height: 1.6;">Snow in %%=v(@cityName)=%%! With a 7-day average of %%=v(@day7Avg)=%%°C, the snow is here to stay. Get ready for an amazing winter week ahead!</p>
+          </td>
+        </tr>
+
+        <!-- Products -->
+        <tr>
+          <td style="padding: 0 20px 30px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/dssBdxQg/snowy-boots.jpg" alt="Snow Boots" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Snow Boots</h3>
+                  <p style="margin: 0; color: #5b7fa3; font-size: 20px; font-weight: bold;">$189</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #5b7fa3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Conquer the Week</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/S7Bs4RQn/snowy-beanie.jpg" alt="Winter Beanie" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Winter Beanie</h3>
+                  <p style="margin: 0; color: #5b7fa3; font-size: 20px; font-weight: bold;">$35</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #5b7fa3; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Conquer the Week</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+%%[ ELSE ]%%
+<!-- ========== CLOUDY/DEFAULT EMAIL ========== -->
+
+        <!-- Weather Banner -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%); padding: 30px 20px; text-align: center;">
+            <p style="margin: 0; color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Weather Update</p>
+            <h2 style="margin: 10px 0 5px 0; color: #ffffff; font-size: 36px;">%%=v(@cityName)=%%</h2>
+            <p style="margin: 0; color: #ffffff; font-size: 56px; font-weight: bold;">%%=v(@todayTemp)=%%°C</p>
+            <p style="margin: 5px 0 0 0; color: #ffffff; font-size: 14px; opacity: 0.9;">7-day avg: %%=v(@day7Avg)=%%°C</p>
+            <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px;">⛅ Mild conditions</p>
+          </td>
+        </tr>
+
+        <!-- Greeting -->
+        <tr>
+          <td style="padding: 30px 30px 20px 30px;">
+            <h1 style="margin: 0; color: #333333; font-size: 24px;">Hi %%=v(@firstName)=%%, check out our picks!</h1>
+            <p style="margin: 15px 0 0 0; color: #666666; font-size: 16px; line-height: 1.6;">It's %%=v(@todayTemp)=%%°C in %%=v(@cityName)=%% today, with a weekly average of %%=v(@day7Avg)=%%°C. Perfect conditions for our versatile essentials!</p>
+          </td>
+        </tr>
+
+        <!-- Products -->
+        <tr>
+          <td style="padding: 0 20px 30px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/tp2hWFRX/cloudy-jacket.jpg" alt="Casual Jacket" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Casual Jacket</h3>
+                  <p style="margin: 0; color: #7f8c8d; font-size: 20px; font-weight: bold;">$149</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #2c3e50; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Ready for Any Day</a>
+                </td>
+                <td width="50%" style="padding: 10px; text-align: center; vertical-align: top;">
+                  <img src="https://i.ibb.co/Xk8zxM1f/cloudy-sneakers.jpg" alt="Sneakers" width="240" style="border-radius: 8px; max-width: 100%;">
+                  <h3 style="margin: 15px 0 5px 0; color: #333333; font-size: 18px;">Classic Sneakers</h3>
+                  <p style="margin: 0; color: #7f8c8d; font-size: 20px; font-weight: bold;">$119</p>
+                  <a href="#" style="display: inline-block; margin-top: 15px; padding: 12px 25px; background-color: #2c3e50; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Ready for Any Day</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+%%[ ENDIF ]%%
+
+        <!-- CTA Banner -->
+        <tr>
+          <td style="padding: 20px 30px; background-color: #f9f9f9; text-align: center;">
+            <p style="margin: 0 0 5px 0; color: #333333; font-size: 16px; font-weight: bold;">Prepare for the week ahead</p>
+            <p style="margin: 0 0 15px 0; color: #666666; font-size: 14px;">Free shipping on orders over $100</p>
+            <a href="#" style="display: inline-block; padding: 15px 40px; background-color: #1a1a2e; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Shop the 7-Day Forecast</a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 30px; background-color: #1a1a2e; text-align: center;">
+            <p style="margin: 0 0 10px 0; color: #ffffff; font-size: 18px; font-weight: bold;">WEATHERWEAR</p>
+            <p style="margin: 0 0 20px 0; color: #a0a0a0; font-size: 12px;">Dressed for any weather since 2020</p>
+            <p style="margin: 0; color: #a0a0a0; font-size: 12px;">
+              <a href="#" style="color: #a0a0a0; text-decoration: underline;">Shop</a> &nbsp;|&nbsp;
+              <a href="#" style="color: #a0a0a0; text-decoration: underline;">About</a> &nbsp;|&nbsp;
+              <a href="#" style="color: #a0a0a0; text-decoration: underline;">Contact</a>
+            </p>
+            <p style="margin: 20px 0 0 0; color: #666666; font-size: 11px;">
+              You're receiving this because you're subscribed to weather updates for %%=v(@cityName)=%%.<br>
+              <a href="%%unsub_center_url%%" style="color: #666666;">Unsubscribe</a> &nbsp;|&nbsp;
+              <a href="%%profile_center_url%%" style="color: #666666;">Update Preferences</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
