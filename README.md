@@ -10,6 +10,7 @@ One email template, 5 weather categories, and temperature-based sub-variations f
 - `data-extensions.md` - setup guide for the 3 DEs you need
 - `email-template.html` - the full email template with AMPscript
 - `subject-line.txt` - dynamic subject line setup (paste into the email subject field)
+- `cloudpage-deubg.html` - a debug file to run in cloudpage
 
 ## How it all fits together
 
